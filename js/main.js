@@ -217,6 +217,33 @@ function carouselItem(p) {
   return item;
 }
 
+// When the "active" (centered) slide is one of the clones planted at either
+// end of the track, jump the scroll position by exactly the distance to its
+// real counterpart. Both look identical, so the jump is visually invisible —
+// it just relocates us back into the real range so scrolling can continue
+// indefinitely in either direction (a circular/infinite carousel).
+function correctSeam(track) {
+  const active = track._activeItem;
+  if (!active || !active.dataset.cloneOf) return;
+
+  const real = track.querySelector(
+    active.dataset.cloneOf === "last" ? '[data-real-last="true"]' : '[data-real-first="true"]'
+  );
+  if (!real) return;
+
+  const activeRect = active.getBoundingClientRect();
+  const realRect = real.getBoundingClientRect();
+
+  // .carousel-track has scroll-behavior:smooth, which would otherwise animate
+  // this jump too (visibly flying across every slide in between) instead of
+  // relocating instantly the way an invisible seam correction needs to.
+  track.style.scrollBehavior = "auto";
+  track.scrollLeft += realRect.left - activeRect.left;
+  track.style.scrollBehavior = "";
+
+  setActiveItem(track, real);
+}
+
 function setActiveItem(track, item) {
   if (item === track._activeItem) return;
 
@@ -259,9 +286,13 @@ function updateActiveFromScroll(track) {
 
 function initCarouselBehavior(track) {
   let raf = null;
+  let settleTimer = null;
   track.addEventListener("scroll", () => {
     if (raf) cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => updateActiveFromScroll(track));
+
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => correctSeam(track), 160);
   });
 
   // Let a normal (vertical) mouse wheel drive horizontal scrolling too.
@@ -295,10 +326,32 @@ function render(filter) {
   const track = document.getElementById("project-track");
   track._activeItem = null;
   track.innerHTML = "";
-  PROJECTS.filter((p) => filter === "all" || p.category === filter).forEach((p) =>
-    track.appendChild(carouselItem(p))
-  );
-  track.scrollLeft = 0;
+
+  const filtered = PROJECTS.filter((p) => filter === "all" || p.category === filter);
+
+  // Pad the real slides with one clone of the last item at the front and one
+  // clone of the first item at the back, so scrolling past either end lands
+  // on a lookalike slide instead of hitting a hard stop — that's what lets
+  // the carousel loop circularly instead of dead-ending.
+  const realFirst = carouselItem(filtered[0]);
+  realFirst.dataset.realFirst = "true";
+  const realLast = filtered.length > 1 ? carouselItem(filtered[filtered.length - 1]) : realFirst;
+  realLast.dataset.realLast = "true";
+
+  const cloneOfLast = carouselItem(filtered[filtered.length - 1]);
+  cloneOfLast.dataset.cloneOf = "last";
+  const cloneOfFirst = carouselItem(filtered[0]);
+  cloneOfFirst.dataset.cloneOf = "first";
+
+  track.appendChild(cloneOfLast);
+  track.appendChild(realFirst);
+  filtered.slice(1, -1).forEach((p) => track.appendChild(carouselItem(p)));
+  if (filtered.length > 1) track.appendChild(realLast);
+  track.appendChild(cloneOfFirst);
+
+  // Always open on the first slide of the current set (the recap project,
+  // on a fresh page load with no filter applied) without an animated scroll.
+  realFirst.scrollIntoView({ behavior: "instant", inline: "center", block: "nearest" });
   requestAnimationFrame(() => updateActiveFromScroll(track));
 }
 

@@ -169,23 +169,23 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 0.5em; }
   font-weight: 600;
 }
 
-/* Carousel */
+/* Carousel — breaks out of .wrap to span the full viewport width, so wide
+   (landscape) slides and off-center neighbors can bleed off-screen. */
 .carousel {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 .carousel-track {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  padding: 24px calc(50% - min(31vw, 155px));
+  padding: 24px 12vw;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
@@ -193,7 +193,9 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 0.5em; }
 .carousel-track::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
 
 .carousel-nav {
-  flex: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 44px;
   height: 44px;
   border-radius: 999px;
@@ -205,14 +207,16 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 0.5em; }
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
+  z-index: 3;
   transition: border-color 0.15s, transform 0.15s;
 }
-.carousel-nav:hover { border-color: var(--orange); transform: scale(1.06); }
+.carousel-nav.prev { left: 16px; }
+.carousel-nav.next { right: 16px; }
+.carousel-nav:hover { border-color: var(--orange); transform: translateY(-50%) scale(1.06); }
 
 .carousel-item {
   flex: none;
-  width: min(62vw, 310px);
+  width: auto;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
@@ -227,7 +231,8 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 0.5em; }
 
 .video-frame {
   position: relative;
-  width: 100%;
+  height: clamp(220px, 34vw, 460px);
+  width: auto;
   aspect-ratio: var(--ar, 3 / 4);
   border-radius: var(--radius);
   overflow: hidden;
@@ -274,7 +279,12 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 0.5em; }
 }
 .carousel-item.is-active .mute-btn { display: flex; }
 
-.item-meta { padding: 14px 4px 0; }
+.item-meta {
+  padding: 14px 4px 0;
+  /* Without this, a wide still image or long reference title can grow past
+     the video-frame's aspect-ratio-driven width and inflate the whole card. */
+  min-width: 0;
+}
 
 .item-title-row {
   display: flex;
@@ -301,6 +311,10 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 0.5em; }
 .item-stills figure { margin: 0; }
 .item-stills img {
   width: 100%;
+  /* Caps each still's contribution to the card's natural (shrink-to-fit)
+     width — without this, a large source image forces the whole card to
+     grow toward its raw pixel size instead of the video-frame's size. */
+  max-width: 160px;
   border-radius: 6px;
   display: block;
 }
