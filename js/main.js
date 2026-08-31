@@ -18,6 +18,12 @@ const PROJECTS = [
     extra: [
       { label: "Raw render pass", video: "assets/videos/CrystalOceanRendered0001-0240.mp4" },
     ],
+    references: [
+      { title: "5 Toon Shading Tips You Must Know (Blender)", creator: "Levi Magony", url: "https://www.youtube.com/watch?v=n9ZNGVvMOSQ" },
+      { title: "Modeling a Whale in Blender 2.8 with Proportional Editing", creator: "Blender Bash", url: "https://www.youtube.com/watch?v=_HBxtiwATj8" },
+      { title: "Modeling a 3D Jellyfish in Blender", creator: "SaTales", url: "https://www.youtube.com/watch?v=_YpI4bgDg_4" },
+      { title: "How to Make Low Poly Clouds in Blender for Your Game!", creator: "Chris Folea Makes Things", url: "https://www.youtube.com/shorts/DWGpqrHwb7I" },
+    ],
   },
   {
     title: "Bottle",
@@ -29,6 +35,9 @@ const PROJECTS = [
     extra: [
       { label: "Instagram cut", video: "assets/videos/BottleVideoInsta0001-0239.mp4" },
     ],
+    references: [
+      { title: "Blender 3D Beginner Tutorial: Mushrooms in Bottle", creator: "3DGreenhorn", url: "https://www.youtube.com/watch?v=kbiMXiUz9cc" },
+    ],
   },
   {
     title: "Bedroom",
@@ -37,6 +46,9 @@ const PROJECTS = [
     video: "assets/videos/Bedroom0001-0072.mp4",
     poster: "assets/images/BedroomThumbnail.png",
     description: "",
+    references: [
+      { title: "Blender 3D - Create a 3D Isometric Bedroom in 15 Minutes | Beginner Tutorial", creator: "3DGreenhorn", url: "https://www.youtube.com/watch?v=yCHT23A6aJA" },
+    ],
   },
   {
     title: "Living Room",
@@ -45,6 +57,9 @@ const PROJECTS = [
     video: "assets/videos/Livingroom0001-0072.mp4",
     poster: "assets/images/LivingRoomThumbnail.png",
     description: "",
+    references: [
+      { title: "Blender 3D Beginner Tutorial: Smooth 3D Living Room", creator: "3DGreenhorn", url: "https://www.youtube.com/watch?v=dEGJeVnWZAA" },
+    ],
   },
   {
     title: "Kirby",
@@ -53,6 +68,9 @@ const PROJECTS = [
     video: "assets/videos/KirbyVideo.mp4",
     poster: "assets/images/KirbyThumbnail.png",
     description: "",
+    references: [
+      { title: "How to Model and Rig Kirby in Blender! | Intermediate Tutorials | Blender 2.9x", creator: "CG Smoothie", url: "https://www.youtube.com/watch?v=vkt4a5ReBEA" },
+    ],
   },
   {
     title: "Space Station",
@@ -61,6 +79,10 @@ const PROJECTS = [
     video: "assets/videos/SpacestationVideo0001-0650.mp4",
     poster: "assets/images/SpaceStationThumbnail.png",
     description: "",
+    references: [
+      { title: "Spaceship Blender Tutorial", creator: "Stefeliga Flavius", url: "https://www.youtube.com/watch?v=YW3XxAcLNY8" },
+      { title: "How to Model Easy Stars in Blender (Tutorial)", creator: "Ryan King Art", url: "https://www.youtube.com/watch?v=3fW3jnGXF58" },
+    ],
   },
   {
     title: "Donut",
@@ -72,6 +94,9 @@ const PROJECTS = [
     stills: [
       { label: "Cycles render", src: "assets/images/Donut5.0RenderCycles.png" },
       { label: "EEVEE render", src: "assets/images/Donut5.0RenderEEVEE.png" },
+    ],
+    references: [
+      { title: "Beginner Blender 4.0 Tutorial - Full Course", creator: "Blender Guru", url: "https://www.youtube.com/watch?v=4haAdmHqGOw" },
     ],
   },
 ];
@@ -117,6 +142,23 @@ function carouselItem(p) {
       .join("");
   }
 
+  let refsHtml = "";
+  if (p.references) {
+    refsHtml = `
+      <details class="item-extra item-refs">
+        <summary>Tutorial reference${p.references.length > 1 ? "s" : ""}</summary>
+        <ul>
+          ${p.references
+            .map((r) =>
+              r.url
+                ? `<li><a href="${r.url}" target="_blank" rel="noopener">${r.title}</a>${r.creator ? ` — ${r.creator}` : ""}</li>`
+                : `<li>${r.title}${r.creator ? ` — ${r.creator}` : ""}</li>`
+            )
+            .join("")}
+        </ul>
+      </details>`;
+  }
+
   let stillsHtml = "";
   if (p.stills) {
     stillsHtml = `
@@ -141,23 +183,30 @@ function carouselItem(p) {
       <p class="item-desc">${p.description || ""}</p>
       ${stillsHtml}
       ${extraHtml}
+      ${refsHtml}
     </div>
   `;
 
   const video = item.querySelector(".carousel-video");
+  const videoFrame = item.querySelector(".video-frame");
   const muteBtn = item.querySelector(".mute-btn");
 
-  // For projects with no poster image, grab a frame from the video itself
-  // so there's still a static thumbnail to show while inactive.
-  if (!p.poster) {
-    video.addEventListener(
-      "loadedmetadata",
-      () => {
+  video.addEventListener(
+    "loadedmetadata",
+    () => {
+      // Match the frame to the video's real aspect ratio (portrait, square,
+      // or landscape) instead of forcing every card into one fixed shape.
+      if (video.videoWidth && video.videoHeight) {
+        videoFrame.style.setProperty("--ar", `${video.videoWidth} / ${video.videoHeight}`);
+      }
+      // For projects with no poster image, grab a frame from the video itself
+      // so there's still a static thumbnail to show while inactive.
+      if (!p.poster) {
         video.currentTime = Math.min(0.15, video.duration || 0);
-      },
-      { once: true }
-    );
-  }
+      }
+    },
+    { once: true }
+  );
 
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
