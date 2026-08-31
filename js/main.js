@@ -3,7 +3,7 @@
 // for it, so rename it once you know which project it is.
 const PROJECTS = [
   {
-    title: "Untitled Project",
+    title: "Digital Portfolio Y1 Recap",
     category: "big",
     date: "2025-05-04",
     video: "assets/videos/0001-2347.mp4",
