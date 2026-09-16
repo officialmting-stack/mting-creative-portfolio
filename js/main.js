@@ -104,18 +104,21 @@ const PROJECTS = [
 const SUBSTACK_POSTS = [
   {
     title: "My Brother's Laugh",
+    subtitle: "Written 9/13/26, published 9/13/26 - Reflection",
     url: "https://magykti.substack.com/p/my-brothers-laugh",
     date: "2026-09-13",
     image: "https://substackcdn.com/image/fetch/$s_!Gbs6!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F14d7d714-6576-44b4-b08b-6f815a9edd12_2070x1552.jpeg",
   },
   {
     title: "Time — and Just a Spot of It",
+    subtitle: "Written 8/5/2026, published 9/8/2026 - Reflection",
     url: "https://magykti.substack.com/p/time-and-just-a-spot-of-it",
     date: "2026-09-09",
     image: "https://substackcdn.com/image/fetch/$s_!0Uoo!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F5e3c7839-0141-4da4-b30d-58bf7597c593_1164x1552.jpeg",
   },
   {
     title: "The First Post: A Reflection on Camp (2026)",
+    subtitle: "Written 8/2/2026, published 8/6/2026 - Reflection",
     url: "https://magykti.substack.com/p/the-first-post-a-reflection-on-camp",
     date: "2026-08-06",
     image: "https://substackcdn.com/image/fetch/$s_!-5WF!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F2cf66aab-7219-4880-9dff-7679ddd13f09_1164x1552.jpeg",
@@ -136,15 +139,38 @@ function substackItem(post) {
   return a;
 }
 
-function renderSubstack() {
-  const track = document.getElementById("substack-track");
+// The hero's compact teaser marquee: the post list is duplicated back-to-back
+// so the CSS animation (translateX to -50%) can loop seamlessly.
+function renderSubstackMarquee(trackId) {
+  const track = document.getElementById(trackId);
   if (!track || !SUBSTACK_POSTS.length) return;
-  // The list is duplicated back-to-back so the CSS marquee animation
-  // (translateX to -50%) can loop seamlessly without a visible reset.
   [...SUBSTACK_POSTS, ...SUBSTACK_POSTS].forEach((post) => track.appendChild(substackItem(post)));
 }
 
-renderSubstack();
+function writingTile(post) {
+  const a = document.createElement("a");
+  a.className = "writing-tile";
+  a.href = post.url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.innerHTML = `
+    <img src="${post.image}" alt="${post.title}" loading="lazy">
+    <div class="writing-tile-body">
+      <div class="writing-tile-title">${post.title}</div>
+      <div class="writing-tile-sub">${post.subtitle || ""}</div>
+    </div>
+  `;
+  return a;
+}
+
+function renderWritingTiles() {
+  const grid = document.getElementById("writing-tiles");
+  if (!grid) return;
+  SUBSTACK_POSTS.forEach((post) => grid.appendChild(writingTile(post)));
+}
+
+renderSubstackMarquee("substack-track-hero");
+renderWritingTiles();
 
 /* ---------- Theme toggle ---------- */
 (function initTheme() {
